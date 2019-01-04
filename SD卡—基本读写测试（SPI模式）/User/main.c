@@ -3,7 +3,7 @@
   * @file    main.c
   * @author  fire
   * @version V1.0
-  * @date    2013-xx-xx
+  * @date    2018-xx-xx
   * @brief   测试led
   ******************************************************************************
   * @attention
@@ -14,40 +14,14 @@
   *
   ******************************************************************************
   */ 
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f1xx.h"
 #include "./usart/bsp_debug_usart.h"
 #include "./led/bsp_led.h"
-#include "./flash/bsp_spi_flash.h" 
-void Delay(__IO uint32_t nCount);
-typedef enum { FAILED = 0, PASSED = !FAILED} TestStatus;
-
-/* 获取缓冲区的长度 */
-#define TxBufferSize1   (countof(TxBuffer1) - 1)
-#define RxBufferSize1   (countof(TxBuffer1) - 1)
-#define countof(a)      (sizeof(a) / sizeof(*(a)))
-#define  BufferSize (countof(Tx_Buffer)-1)
-
-#define  FLASH_WriteAddress     0x00000
-#define  FLASH_ReadAddress      FLASH_WriteAddress
-#define  FLASH_SectorToErase    FLASH_WriteAddress
-
-   
-/* 发送缓冲区初始化 */
-uint8_t Tx_Buffer[] = "感谢您选用秉火stm32开发板\r\nhttp://firestm32.taobao.com";
-uint8_t Rx_Buffer[BufferSize];
-
-//读取的ID存储位置
-__IO uint32_t DeviceID = 0;
-__IO uint32_t FlashID = 0;
-__IO TestStatus TransferStatus1 = FAILED;
-
-// 函数原型声明
-void Delay(__IO uint32_t nCount);
-TestStatus Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength);
-
+#include "./sdcard/bsp_spi_sdcard.h"
+#include "./sdcard/sdcard_test.h"
+#include ".\key\bsp_key.h" 
 /*
  * 函数名：main
  * 描述  ：主函数
@@ -64,90 +38,27 @@ int main(void)
 	/* 配置串口1为：115200 8-N-1 */
 	DEBUG_USART_Config();
   
-	printf("\r\n这是一个8M串行flash(W25Q64)实验(SPI驱动) \r\n");
+  Key_GPIO_Config();
+	printf("\r\n欢迎使用野火  STM32 开发板。\r\n");	
 	
-  /* 16M串行flash W25Q64初始化 */
-	SPI_FLASH_Init();
-		/* 获取 Flash Device ID */
-	DeviceID = SPI_FLASH_ReadDeviceID();
+	printf("在开始进行SD卡基本测试前，请给开发板插入32G以内的SD卡\r\n");			
+	printf("本程序会对SD卡进行 非文件系统 方式读写，会删除SD卡的文件系统\r\n");		
+	printf("实验后可通过电脑格式化或使用SD卡文件系统的例程恢复SD卡文件系统\r\n");		
+	printf("\r\n 但sd卡内的原文件不可恢复，实验前务必备份SD卡内的原文件！！！\r\n");		
 	
-	Delay( 200 );
-	
-	/* 获取 SPI Flash ID */
-	FlashID = SPI_FLASH_ReadID();
-	
-	printf("\r\nFlashID is 0x%X,  Manufacturer Device ID is 0x%X\r\n", FlashID, DeviceID);
-	
-	/* 检验 SPI Flash ID */
-	if (FlashID == sFLASH_ID) 
-	{	
-		printf("\r\n检测到SPI FLASH W25Q64 !\r\n");
-		
-		/* 擦除将要写入的 SPI FLASH 扇区，FLASH写入前要先擦除 */
-		SPI_FLASH_SectorErase(FLASH_SectorToErase);	 	 
-		
-		/* 将发送缓冲区的数据写到flash中 */
-		SPI_FLASH_BufferWrite(Tx_Buffer, FLASH_WriteAddress, BufferSize);
-		printf("\r\n写入的数据为：\r\n%s", Tx_Buffer);
-		
-		/* 将刚刚写入的数据读出来放到接收缓冲区中 */
-		SPI_FLASH_BufferRead(Rx_Buffer, FLASH_ReadAddress, BufferSize);
-		printf("\r\n读出的数据为：\r\n%s", Rx_Buffer);
-		
-		/* 检查写入的数据与读出的数据是否相等 */
-		TransferStatus1 = Buffercmp(Tx_Buffer, Rx_Buffer, BufferSize);
-		
-		if( PASSED == TransferStatus1 )
-		{    
-			LED2_ON;
-			printf("\r\n16M串行flash(W25Q64)测试成功!\n\r");
+	printf("\r\n 若已确认，请按开发板的KEY1按键，开始SD卡测试实验....\r\n");	
+  
+  /* Infinite loop */
+  while (1)
+  {	
+		/*按下按键开始进行SD卡读写实验，会损坏SD卡原文件*/
+		if(	Key_Scan(KEY1_GPIO_PORT,KEY1_PIN) == KEY_ON)
+		{
+			printf("\r\n开始进行SD卡读写实验\r\n");	
+		  SD_Test();			
 		}
-		else
-		{        
-			LED1_ON;
-			printf("\r\n16M串行flash(W25Q64)测试失败!\n\r");
-		}
-	}// if (FlashID == sFLASH_ID)
-	else
-	{    
-		LED1_ON;
-		printf("\r\n获取不到 W25Q64 ID!\n\r");
-	}
-	
-	SPI_Flash_PowerDown();  
-	while(1);  
+	} 
 }
-
-/*
- * 函数名：Buffercmp
- * 描述  ：比较两个缓冲区中的数据是否相等
- * 输入  ：-pBuffer1     src缓冲区指针
- *         -pBuffer2     dst缓冲区指针
- *         -BufferLength 缓冲区长度
- * 输出  ：无
- * 返回  ：-PASSED pBuffer1 等于   pBuffer2
- *         -FAILED pBuffer1 不同于 pBuffer2
- */
-TestStatus Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint16_t BufferLength)
-{
-  while(BufferLength--)
-  {
-    if(*pBuffer1 != *pBuffer2)
-    {
-      return FAILED;
-    }
-
-    pBuffer1++;
-    pBuffer2++;
-  }
-  return PASSED;
-}
-
-void Delay(__IO uint32_t nCount)
-{
-  for(; nCount != 0; nCount--);
-}
-
 
 
 /**

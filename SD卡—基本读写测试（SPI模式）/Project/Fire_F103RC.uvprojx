@@ -646,9 +646,19 @@
               <FilePath>..\User\usart\bsp_debug_usart.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_spi_flash.c</FileName>
+              <FileName>bsp_spi_sdcard.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\User\flash\bsp_spi_flash.c</FilePath>
+              <FilePath>..\User\sdcard\bsp_spi_sdcard.c</FilePath>
+            </File>
+            <File>
+              <FileName>sdcard_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\sdcard\sdcard_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\key\bsp_key.c</FilePath>
             </File>
           </Files>
         </Group>

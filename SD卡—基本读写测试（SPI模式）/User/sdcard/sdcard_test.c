@@ -3,12 +3,12 @@
   * @file    bsp_led.c
   * @author  fire
   * @version V1.0
-  * @date    2015-xx-xx
+  * @date    2018-xx-xx
   * @brief   SPI sd卡测试驱动（不含文件系统）
   ******************************************************************************
   * @attention
   *
-  * 实验平台:秉火  STM32 F103-MINI 开发板  
+  * 实验平台:野火  STM32 F103-MINI 开发板  
   * 论坛    :http://www.firebbs.cn
   * 淘宝    :https://fire-stm32.taobao.com
   *
@@ -17,7 +17,7 @@
 #include "./sdcard/sdcard_test.h"
 #include "./led/bsp_led.h"
 #include "./sdcard/bsp_spi_sdcard.h"
-#include "./usart/bsp_usart.h"
+#include "./usart/bsp_debug_usart.h"
 
 /* Private typedef -----------------------------------------------------------*/
 typedef enum {FAILED = 0, PASSED = !FAILED} TestStatus;
@@ -27,7 +27,6 @@ typedef enum {FAILED = 0, PASSED = !FAILED} TestStatus;
 
 #define NUMBER_OF_BLOCKS      10  /* For Multi Blocks operation (Read/Write) */
 #define MULTI_BUFFER_SIZE    (BLOCK_SIZE * NUMBER_OF_BLOCKS)
-
 
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
@@ -41,9 +40,7 @@ static void SD_SingleBlockTest(void);
 void SD_MultiBlockTest(void);
 static void Fill_Buffer(uint8_t *pBuffer, uint32_t BufferLength, uint32_t Offset);
 static TestStatus Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint32_t BufferLength);
-
 /* Private functions ---------------------------------------------------------*/
-
 
 
 void SD_Test(void)
@@ -71,8 +68,7 @@ void SD_Test(void)
 		LED2_ON;
     /*muti block 读写测试*/
     SD_MultiBlockTest();
-  }
- 
+  } 
 }
 
 
@@ -184,7 +180,6 @@ TestStatus Buffercmp(uint8_t* pBuffer1, uint8_t* pBuffer2, uint32_t BufferLength
     pBuffer1++;
     pBuffer2++;
   }
-
   return PASSED;
 }
 

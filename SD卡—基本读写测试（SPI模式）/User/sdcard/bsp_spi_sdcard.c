@@ -1,47 +1,19 @@
 /**
   ******************************************************************************
-  * @file    stm32_eval_spi_sd.c
-  * @author  MCD Application Team
-  * @version V4.5.0
-  * @date    07-March-2011
-  * @brief   This file provides a set of functions needed to manage the SPI SD 
-  *          Card memory mounted on STM32xx-EVAL board (refer to stm32_eval.h
-  *          to know about the boards supporting this memory). 
-  *          It implements a high level communication layer for read and write 
-  *          from/to this memory. The needed STM32 hardware resources (SPI and 
-  *          GPIO) are defined in stm32xx_eval.h file, and the initialization is 
-  *          performed in SD_LowLevel_Init() function declared in stm32xx_eval.c 
-  *          file.
-  *          You can easily tailor this driver to any other development board, 
-  *          by just adapting the defines for hardware resources and 
-  *          SD_LowLevel_Init() function.
-  *            
-  *          +-------------------------------------------------------+
-  *          |                     Pin assignment                    |
-  *          +-------------------------+---------------+-------------+
-  *          |  STM32 SPI Pins         |     SD        |    Pin      |
-  *          +-------------------------+---------------+-------------+
-  *          | SD_SPI_CS_PIN           |   ChipSelect  |    1        |
-  *          | SD_SPI_MOSI_PIN / MOSI  |   DataIn      |    2        |
-  *          |                         |   GND         |    3 (0 V)  |
-  *          |                         |   VDD         |    4 (3.3 V)|
-  *          | SD_SPI_SCK_PIN / SCLK   |   Clock       |    5        |
-  *          |                         |   GND         |    6 (0 V)  |
-  *          | SD_SPI_MISO_PIN / MISO  |   DataOut     |    7        |
-  *          +-------------------------+---------------+-------------+
+  * @file    main.c
+  * @author  fire
+  * @version V1.0
+  * @date    2013-xx-xx
+  * @brief   测试led
   ******************************************************************************
   * @attention
   *
-  * THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
-  * WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE
-  * TIME. AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY
-  * DIRECT, INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING
-  * FROM THE CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE
-  * CODING INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
+  * 实验平台:野火 F103 STM32 开发板 
+  * 论坛    :http://www.firebbs.cn
+  * 淘宝    :https://fire-stm32.taobao.com
   *
-  * <h2><center>&copy; COPYRIGHT 2011 STMicroelectronics</center></h2>
-  ******************************************************************************  
-  */
+  ******************************************************************************
+  */ 
 
 /* Includes ------------------------------------------------------------------*/
 #include "./sdcard/bsp_spi_sdcard.h"
@@ -50,105 +22,54 @@
 uint8_t  SD_Type = SD_TYPE_NOT_SD;	//存储卡的类型
 SD_CardInfo SDCardInfo;	//用于存储卡的信息
   
-
-
-/**
-  * @brief  DeInitializes the SD/SD communication.
-  * @param  None
-  * @retval None
-  */
-void SD_DeInit(void)
-{
-	GPIO_InitTypeDef  GPIO_InitStructure;
-  
-  SPI_Cmd(SD_SPI, DISABLE); /*!< SD_SPI disable */
-  SPI_I2S_DeInit(SD_SPI);   /*!< DeInitializes the SD_SPI */
-  
-  /*!< SD_SPI Periph clock disable */
-  RCC_APB1PeriphClockCmd(SD_SPI_CLK, DISABLE);
-  /*!< DeRemap SPI3 Pins */
-//  GPIO_PinRemapConfig(GPIO_Remap_SPI3, DISABLE);  
-  
-  /*!< Configure SD_SPI pins: SCK */
-  GPIO_InitStructure.GPIO_Pin = SD_SPI_SCK_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-  GPIO_Init(SD_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
-
-  /*!< Configure SD_SPI pins: MISO */
-  GPIO_InitStructure.GPIO_Pin = SD_SPI_MISO_PIN;
-  GPIO_Init(SD_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
-
-  /*!< Configure SD_SPI pins: MOSI */
-  GPIO_InitStructure.GPIO_Pin = SD_SPI_MOSI_PIN;
-  GPIO_Init(SD_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
-
-  /*!< Configure SD_SPI_CS_PIN pin: SD Card CS pin */
-  GPIO_InitStructure.GPIO_Pin = SD_CS_PIN;
-  GPIO_Init(SD_CS_GPIO_PORT, &GPIO_InitStructure);
-
-  /*!< Configure SD_SPI_DETECT_PIN pin: SD Card detect pin */
-//  GPIO_InitStructure.GPIO_Pin = SD_DETECT_PIN;
-//  GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_InitStructure);
-
-}
-
+SPI_HandleTypeDef SpiHandle;
 
 static void GPIO_Configuration(void)
 {
-	GPIO_InitTypeDef  GPIO_InitStructure;
-  SPI_InitTypeDef   SPI_InitStructure;
+  /*定义一个GPIO_InitTypeDef类型的结构体*/
+  GPIO_InitTypeDef  GPIO_InitStruct;
 
-  /*!< SD_SPI_CS_GPIO, SD_SPI_MOSI_GPIO, SD_SPI_MISO_GPIO, SD_SPI_DETECT_GPIO 
-       and SD_SPI_SCK_GPIO Periph clock enable */
-  RCC_APB2PeriphClockCmd(SD_CS_GPIO_CLK | SD_SPI_MOSI_GPIO_CLK | SD_SPI_MISO_GPIO_CLK |
-                         SD_SPI_SCK_GPIO_CLK | SD_DETECT_GPIO_CLK, ENABLE);
+  SD_SPI_CLK(); 
+  SD_SPI_SCK_GPIO_CLK(); 
+  SD_DETECT_GPIO_CLK();
 
-  /*!< SD_SPI Periph clock enable */
-  SD_SPI_APBxClock_FUN(SD_SPI_CLK, ENABLE);
-  /*!< AFIO Periph clock enable */
-//  RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
-//  /*!< Remap SPI3 Pins */
-//  GPIO_PinRemapConfig(GPIO_Remap_SPI3,ENABLE);  
-  
-  /*!< Configure SD_SPI pins: SCK */
-  GPIO_InitStructure.GPIO_Pin = SD_SPI_SCK_PIN;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_Init(SD_SPI_SCK_GPIO_PORT, &GPIO_InitStructure);
+  /*选择要控制的GPIO引脚*/															   
+  GPIO_InitStruct.Pin = SD_SPI_SCK_PIN;	  
+  GPIO_InitStruct.Mode  = GPIO_MODE_AF_PP;  
+  GPIO_InitStruct.Pull  = GPIO_PULLUP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(SD_SPI_SCK_GPIO_PORT, &GPIO_InitStruct);	
 
-  /*!< Configure SD_SPI pins: MOSI */
-  GPIO_InitStructure.GPIO_Pin = SD_SPI_MOSI_PIN;
-  GPIO_Init(SD_SPI_MOSI_GPIO_PORT, &GPIO_InitStructure);
+  GPIO_InitStruct.Pin =  SD_SPI_MOSI_PIN;
+  HAL_GPIO_Init(SD_SPI_SCK_GPIO_PORT, &GPIO_InitStruct);
 
-  /*!< Configure SD_SPI pins: MISO */
-  GPIO_InitStructure.GPIO_Pin = SD_SPI_MISO_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;  
-  GPIO_Init(SD_SPI_MISO_GPIO_PORT, &GPIO_InitStructure);
-  
-  /*!< Configure SD_SPI_CS_PIN pin: SD Card CS pin */
-  GPIO_InitStructure.GPIO_Pin = SD_CS_PIN;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-  GPIO_Init(SD_CS_GPIO_PORT, &GPIO_InitStructure);
+  GPIO_InitStruct.Pin = SD_SPI_SCK_PIN;	
+  HAL_GPIO_Init(SD_SPI_MOSI_GPIO_PORT, &GPIO_InitStruct);
 
-  /*!< Configure SD_SPI_DETECT_PIN pin: SD Card detect pin */
-//  GPIO_InitStructure.GPIO_Pin = SD_DETECT_PIN;
-//  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-//  GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_InitStructure);
+  GPIO_InitStruct.Pin = SD_CS_PIN;	
+  HAL_GPIO_Init(SD_CS_GPIO_PORT, &GPIO_InitStruct);
 
-  /*!< SD_SPI Config */
-  SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-  SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
-  SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-  SPI_InitStructure.SPI_CPOL = SPI_CPOL_High;
-  SPI_InitStructure.SPI_CPHA = SPI_CPHA_2Edge;
-  SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-  SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;
-  SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;
-  SPI_InitStructure.SPI_CRCPolynomial = 7;
-  SPI_Init(SD_SPI, &SPI_InitStructure);
-  
-  SPI_Cmd(SD_SPI, ENABLE); /*!< SD_SPI enable */
+  GPIO_InitStruct.Pin = SD_DETECT_PIN;
+  GPIO_InitStruct.Mode  =GPIO_MODE_INPUT; 
+  HAL_GPIO_Init(SD_DETECT_GPIO_PORT, &GPIO_InitStruct);
 
+  SpiHandle.Instance               = SPI1;
+  SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
+  SpiHandle.Init.CLKPhase          = SPI_PHASE_2EDGE;
+  SpiHandle.Init.CLKPolarity       = SPI_POLARITY_HIGH;
+  SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
+  SpiHandle.Init.CRCPolynomial     = 7;
+  SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
+  SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+  SpiHandle.Init.NSS               = SPI_NSS_SOFT;
+  SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLE;
+
+  SpiHandle.Init.Mode = SPI_MODE_MASTER;
+
+  HAL_SPI_Init(&SpiHandle); 
+
+  __HAL_SPI_ENABLE(&SpiHandle);     
 }
 /**
   * @brief  Initializes the SD/SD communication.
@@ -1081,20 +1002,20 @@ SD_Error SD_GoIdleState(void)
 uint8_t SD_WriteByte(uint8_t Data)
 {
   /*!< Wait until the transmit buffer is empty */
-  while(SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_TXE) == RESET)
+  while(__HAL_SPI_GET_FLAG( &SpiHandle, SPI_FLAG_TXE ) == RESET)
   {
   }
   
   /*!< Send the byte */
-  SPI_I2S_SendData(SD_SPI, Data);
+   WRITE_REG(SpiHandle.Instance->DR, Data);
   
   /*!< Wait to receive a byte*/
-  while(SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_RXNE) == RESET)
+  while(__HAL_SPI_GET_FLAG( &SpiHandle, SPI_FLAG_RXNE ) == RESET)
   {
   }
   
   /*!< Return the byte read from the SPI bus */ 
-  return SPI_I2S_ReceiveData(SD_SPI);
+  return READ_REG(SpiHandle.Instance->DR);
 }
 
 /**
@@ -1107,43 +1028,19 @@ uint8_t SD_ReadByte(void)
   uint8_t Data = 0;
   
   /*!< Wait until the transmit buffer is empty */
-  while (SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_TXE) == RESET)
+  while (__HAL_SPI_GET_FLAG( &SpiHandle, SPI_FLAG_TXE ) == RESET)
   {
   }
   /*!< Send the byte */
-  SPI_I2S_SendData(SD_SPI, SD_DUMMY_BYTE);
+  WRITE_REG(SpiHandle.Instance->DR, SD_DUMMY_BYTE);
 
   /*!< Wait until a data is received */
-  while (SPI_I2S_GetFlagStatus(SD_SPI, SPI_I2S_FLAG_RXNE) == RESET)
+  while(__HAL_SPI_GET_FLAG( &SpiHandle, SPI_FLAG_RXNE ) == RESET)
   {
   }
   /*!< Get the received data */
-  Data = SPI_I2S_ReceiveData(SD_SPI);
-
+  Data = READ_REG(SpiHandle.Instance->DR);
   /*!< Return the shifted data */
   return Data;
 }
-
-/**
-  * @}
-  */
-
-
-/**
-  * @}
-  */
-
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */  
-
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/

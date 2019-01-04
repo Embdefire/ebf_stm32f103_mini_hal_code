@@ -3,7 +3,7 @@
   * @file    stm32_eval_spi_sd.h
   * @author  MCD Application Team
   * @version V4.5.0
-  * @date    07-March-2011
+  * @date    07-March-2018
   * @brief   This file contains all the functions prototypes for the stm32_eval_spi_sd
   *          firmware driver.
   ******************************************************************************
@@ -29,52 +29,30 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f10x.h"
-	 
-/** @addtogroup Utilities
-  * @{
-  */
-	 
+#include "stm32f1xx.h"
+
 #define SD_SPI                           SPI1
-#define SD_SPI_CLK                       RCC_APB2Periph_SPI1
-#define SD_SPI_APBxClock_FUN            RCC_APB2PeriphClockCmd
+#define SD_SPI_CLK()                     __HAL_RCC_SPI1_CLK_ENABLE()
 		 
-#define SD_SPI_SCK_PIN                   GPIO_Pin_5               
+#define SD_SPI_SCK_PIN                   GPIO_PIN_5               
 #define SD_SPI_SCK_GPIO_PORT             GPIOA                       
-#define SD_SPI_SCK_GPIO_CLK              RCC_APB2Periph_GPIOA
+#define SD_SPI_SCK_GPIO_CLK()             __HAL_RCC_GPIOA_CLK_ENABLE()
 	 
-#define SD_SPI_MISO_PIN                  GPIO_Pin_6                
+#define SD_SPI_MISO_PIN                  GPIO_PIN_6                
 #define SD_SPI_MISO_GPIO_PORT            GPIOA                       
-#define SD_SPI_MISO_GPIO_CLK             RCC_APB2Periph_GPIOA
+#define SD_SPI_MISO_GPIO_CLK()           __HAL_RCC_GPIOA_CLK_ENABLE()
 	 
-#define SD_SPI_MOSI_PIN                  GPIO_Pin_7                
+#define SD_SPI_MOSI_PIN                  GPIO_PIN_7                
 #define SD_SPI_MOSI_GPIO_PORT            GPIOA                       
-#define SD_SPI_MOSI_GPIO_CLK             RCC_APB2Periph_GPIOA
+#define SD_SPI_MOSI_GPIO_CLK()            __HAL_RCC_GPIOA_CLK_ENABLE()
 	 
-#define SD_CS_PIN                        GPIO_Pin_8                 
+#define SD_CS_PIN                        GPIO_PIN_8                 
 #define SD_CS_GPIO_PORT                  GPIOA                     
-#define SD_CS_GPIO_CLK                   RCC_APB2Periph_GPIOA
+#define SD_CS_GPIO_CLK()                 __HAL_RCC_GPIOA_CLK_ENABLE()
 
-#define SD_DETECT_PIN                    GPIO_Pin_0                 
+#define SD_DETECT_PIN                    GPIO_PIN_0                 
 #define SD_DETECT_GPIO_PORT              GPIOE                       
-#define SD_DETECT_GPIO_CLK               RCC_APB2Periph_GPIOE
-
-  
-/** @addtogroup STM32_EVAL
-  * @{
-  */ 
-
-/** @addtogroup Common
-  * @{
-  */
-  
-/** @addtogroup STM32_EVAL_SPI_SD
-  * @{
-  */  
-
-/** @defgroup STM32_EVAL_SPI_SD_Exported_Types
-  * @{
-  */ 
+#define SD_DETECT_GPIO_CLK()             __HAL_RCC_GPIOE_CLK_ENABLE() 
 
 typedef enum
 {
@@ -172,16 +150,9 @@ typedef struct
   uint32_t CardBlockSize; /*!< Card Block Size */
 } SD_CardInfo;
 
-
 extern SD_CardInfo SDCardInfo;	//用于存储卡的信息
 
-/**
-  * @}
-  */
-  
-/** @defgroup STM32_EVAL_SPI_SD_Exported_Constants
-  * @{
-  */ 
+
     
 /**
   * @brief  Block Size
@@ -210,10 +181,6 @@ extern SD_CardInfo SDCardInfo;	//用于存储卡的信息
 #define SD_PRESENT        ((uint8_t)0x01)
 #define SD_NOT_PRESENT    ((uint8_t)0x00)
 
-
-/**
-  * @brief  Commands: CMDxx = CMD-number | 0x40
-  */
 #define SD_CMD_GO_IDLE_STATE          0   /*!< CMD0 = 0x40 */
 #define SD_CMD_SEND_OP_COND           1   /*!< CMD1 = 0x41 */
 #define SD_CMD_SEND_IF_COND						8		/*!< CMD8 = 0x48 */
@@ -249,27 +216,13 @@ extern SD_CardInfo SDCardInfo;	//用于存储卡的信息
 #define SD_TYPE_V2       2  //SDSC
 #define SD_TYPE_V2HC     4	 //SDHC
 
-
   
-/** @defgroup STM32_EVAL_SPI_SD_Exported_Macros
-  * @{
-  */
-/** 
-  * @brief  Select SD Card: ChipSelect pin low   
-  */  
-#define SD_CS_LOW()     GPIO_ResetBits(SD_CS_GPIO_PORT, SD_CS_PIN)
-/** 
-  * @brief  Deselect SD Card: ChipSelect pin high   
-  */ 
-#define SD_CS_HIGH()    GPIO_SetBits(SD_CS_GPIO_PORT, SD_CS_PIN)
-/**
-  * @}
-  */ 
-
-/** @defgroup STM32_EVAL_SPI_SD_Exported_Functions
-  * @{
-  */ 
-void SD_DeInit(void);  
+#define	digitalH(p,i)			{p->BSRR=i;}			  //设置为高电平		
+#define digitalL(p,i)			{p->BSRR=(uint32_t)i << 16;}				//输出低电平 
+   
+#define SD_CS_LOW()     digitalL(SD_CS_GPIO_PORT, SD_CS_PIN)
+#define SD_CS_HIGH()   digitalH(SD_CS_GPIO_PORT, SD_CS_PIN)
+ 
 SD_Error SD_Init(void);
 uint8_t SD_Detect(void);
 SD_Error SD_GetCardInfo(SD_CardInfo *cardinfo);
@@ -295,24 +248,5 @@ uint8_t SD_ReadByte(void);
 #endif
 
 #endif /* __STM32_EVAL_SPI_SD_H */
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */    
 
 /******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
