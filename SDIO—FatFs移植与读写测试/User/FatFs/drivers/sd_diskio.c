@@ -43,12 +43,11 @@
   *
   ******************************************************************************
   */ 
-
 /* Includes ------------------------------------------------------------------*/
 #include <string.h>
 #include "ff_gen_drv.h"
 
-#include "./sdio/bsp_sdio_sdcard.h"
+#include "./sdcard/bsp_spi_sdcard.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
@@ -56,10 +55,15 @@
 /* Disk status */
 static volatile DSTATUS Stat = STA_NOINIT;
 
+
+//固定只支持blocksize大小为512的卡，兼容大于512的卡时，该卡容量会变小
+#define SD_BLOCKSIZE     512//SDCardInfo.CardBlockSize 
+
 /* Private function prototypes -----------------------------------------------*/
 DSTATUS SD_initialize (BYTE);
 DSTATUS SD_status (BYTE);
 DRESULT SD_read (BYTE, BYTE*, DWORD, UINT);
+
 #if _USE_WRITE == 1
   DRESULT SD_write (BYTE, const BYTE*, DWORD, UINT);
 #endif /* _USE_WRITE == 1 */
@@ -93,7 +97,7 @@ DSTATUS SD_initialize(BYTE lun)
   Stat = STA_NOINIT;
   
   /* Configure the uSD device */
-  if(BSP_SD_Init() == MSD_OK)
+  if(SD_Init() == SD_RESPONSE_NO_ERROR)
   {
     Stat &= ~STA_NOINIT;
   }
@@ -107,13 +111,8 @@ DSTATUS SD_initialize(BYTE lun)
   * @retval DSTATUS: Operation status
   */
 DSTATUS SD_status(BYTE lun)
-{
-  Stat = STA_NOINIT;
-
-  if(BSP_SD_GetCardState() == MSD_OK)
-  {
-    Stat &= ~STA_NOINIT;
-  }
+{ 
+  Stat &= ~STA_NOINIT;
   
   return Stat;
 }
@@ -129,19 +128,11 @@ DSTATUS SD_status(BYTE lun)
 DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 {
   DRESULT res = RES_ERROR;
-  uint32_t timeout = 100000;
-
-  if(BSP_SD_ReadBlocks((uint32_t*)buff, 
-                       (uint32_t) (sector), 
-                       count, SD_DATATIMEOUT) == MSD_OK)
+  SD_Error SD_state = SD_RESPONSE_NO_ERROR;
+  
+  SD_state =SD_ReadMultiBlocks(buff,(uint64_t)sector*SD_BLOCKSIZE,SD_BLOCKSIZE,count); 
+  if(SD_state == SD_RESPONSE_NO_ERROR)
   {
-    while(BSP_SD_GetCardState()!= MSD_OK)
-    {
-      if (timeout-- == 0)
-      {
-        return RES_ERROR;
-      }
-    }
     res = RES_OK;
   }
   
@@ -159,20 +150,12 @@ DRESULT SD_read(BYTE lun, BYTE *buff, DWORD sector, UINT count)
 #if _USE_WRITE == 1
 DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 {
-  DRESULT res = RES_ERROR;
-  uint32_t timeout = 100000;
-
-  if(BSP_SD_WriteBlocks((uint32_t*)buff, 
-                        (uint32_t)(sector), 
-                        count, SD_DATATIMEOUT) == MSD_OK)
-  {
-    while(BSP_SD_GetCardState()!= MSD_OK)
-    {
-      if (timeout-- == 0)
-      {
-        return RES_ERROR;
-      }
-    }    
+  DRESULT res = RES_ERROR; 
+  SD_Error SD_state = SD_RESPONSE_NO_ERROR;
+  
+  SD_state=SD_WriteMultiBlocks((uint8_t *)buff,(uint64_t)sector*SD_BLOCKSIZE,SD_BLOCKSIZE,count);
+  if(SD_state == SD_RESPONSE_NO_ERROR)
+  {       
     res = RES_OK;
   }
   
@@ -190,46 +173,39 @@ DRESULT SD_write(BYTE lun, const BYTE *buff, DWORD sector, UINT count)
 #if _USE_IOCTL == 1
 DRESULT SD_ioctl(BYTE lun, BYTE cmd, void *buff)
 {
-  DRESULT res = RES_ERROR;
-  BSP_SD_CardInfo CardInfo;
-  
-  if (Stat & STA_NOINIT) return RES_NOTRDY;
-  
-  switch (cmd)
-  {
-  /* Make sure that no pending write process */
-  case CTRL_SYNC :
-    res = RES_OK;
-    break;
-  
-  /* Get number of sectors on the disk (DWORD) */
-  case GET_SECTOR_COUNT :
-    BSP_SD_GetCardInfo(&CardInfo);
-    *(DWORD*)buff = CardInfo.LogBlockNbr;
-    res = RES_OK;
-    break;
-  
-  /* Get R/W sector size (WORD) */
-  case GET_SECTOR_SIZE :
-    BSP_SD_GetCardInfo(&CardInfo);
-    *(WORD*)buff = CardInfo.LogBlockSize;
-    res = RES_OK;
-    break;
-  
-  /* Get erase block size in unit of sector (DWORD) */
-  case GET_BLOCK_SIZE :
-    BSP_SD_GetCardInfo(&CardInfo);
-    *(DWORD*)buff = CardInfo.LogBlockSize;
-    res = RES_OK;
-    break;
-  
-  default:
-    res = RES_PARERR;
-  }
-  
-  return res;
+  DRESULT status = RES_PARERR;
+			switch (cmd) 
+			{
+				// Get R/W sector size (WORD) 
+				case GET_SECTOR_SIZE :    
+					*(WORD * )buff = SD_BLOCKSIZE;
+				break;
+				// Get erase block size in unit of sector (DWORD)
+				case GET_BLOCK_SIZE :      
+					*(DWORD * )buff = 1;
+				break;
+
+				case GET_SECTOR_COUNT:
+					*(DWORD * )buff = SDCardInfo.CardCapacity/SDCardInfo.CardBlockSize;
+					break;
+				case CTRL_SYNC :
+				break;
+			}
+			status = RES_OK;
+	return status;
 }
-#endif /* _USE_IOCTL == 1 */
-  
+#endif
+
+							 
+__weak DWORD get_fattime(void) {
+	/* 返回当前时间戳 */
+	return	  ((DWORD)(2015 - 1980) << 25)	/* Year 2015 */
+			| ((DWORD)1 << 21)				/* Month 1 */
+			| ((DWORD)1 << 16)				/* Mday 1 */
+			| ((DWORD)0 << 11)				/* Hour 0 */
+			| ((DWORD)0 << 5)				  /* Min 0 */
+			| ((DWORD)0 >> 1);				/* Sec 0 */
+}
+
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
