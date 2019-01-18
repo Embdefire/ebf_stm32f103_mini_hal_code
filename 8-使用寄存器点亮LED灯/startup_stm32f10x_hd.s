@@ -1,44 +1,29 @@
-;******************** (C) COPYRIGHT 2017 STMicroelectronics ********************
-;* File Name          : startup_stm32f103xe.s
+;******************** (C) COPYRIGHT 2011 STMicroelectronics ********************
+;* File Name          : startup_stm32f10x_hd.s
 ;* Author             : MCD Application Team
-;* Version            : V4.2.0
-;* Date               : 31-March-2017
-;* Description        : STM32F103xE Devices vector table for MDK-ARM toolchain. 
+;* Version            : V3.5.0
+;* Date               : 11-March-2011
+;* Description        : STM32F10x High Density Devices vector table for MDK-ARM 
+;*                      toolchain. 
 ;*                      This module performs:
 ;*                      - Set the initial SP
 ;*                      - Set the initial PC == Reset_Handler
 ;*                      - Set the vector table entries with the exceptions ISR address
-;*                      - Configure the clock system
+;*                      - Configure the clock system and also configure the external 
+;*                        SRAM mounted on STM3210E-EVAL board to be used as data 
+;*                        memory (optional, to be enabled by user)
 ;*                      - Branches to __main in the C library (which eventually
 ;*                        calls main()).
-;*                      After Reset the Cortex-M3 processor is in Thread mode,
+;*                      After Reset the CortexM3 processor is in Thread mode,
 ;*                      priority is Privileged, and the Stack is set to Main.
-;********************************************************************************
-;*
-;* <h2><center>&copy; COPYRIGHT(c) 2017 STMicroelectronics</center></h2>
-;*
-;* Redistribution and use in source and binary forms, with or without modification,
-;* are permitted provided that the following conditions are met:
-;*   1. Redistributions of source code must retain the above copyright notice,
-;*      this list of conditions and the following disclaimer.
-;*   2. Redistributions in binary form must reproduce the above copyright notice,
-;*      this list of conditions and the following disclaimer in the documentation
-;*      and/or other materials provided with the distribution.
-;*   3. Neither the name of STMicroelectronics nor the names of its contributors
-;*      may be used to endorse or promote products derived from this software
-;*      without specific prior written permission.
-;*
-;* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-;* AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-;* IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-;* DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-;* FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-;* DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-;* SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-;* CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-;* OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-;* OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-; 
+;* <<< Use Configuration Wizard in Context Menu >>>   
+;*******************************************************************************
+; THE PRESENT FIRMWARE WHICH IS FOR GUIDANCE ONLY AIMS AT PROVIDING CUSTOMERS
+; WITH CODING INFORMATION REGARDING THEIR PRODUCTS IN ORDER FOR THEM TO SAVE TIME.
+; AS A RESULT, STMICROELECTRONICS SHALL NOT BE HELD LIABLE FOR ANY DIRECT,
+; INDIRECT OR CONSEQUENTIAL DAMAGES WITH RESPECT TO ANY CLAIMS ARISING FROM THE
+; CONTENT OF SUCH FIRMWARE AND/OR THE USE MADE BY CUSTOMERS OF THE CODING
+; INFORMATION CONTAINED HEREIN IN CONNECTION WITH THEIR PRODUCTS.
 ;*******************************************************************************
 
 ; Amount of memory (in bytes) allocated for Stack
@@ -47,7 +32,7 @@
 ;   <o> Stack Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Stack_Size      EQU     0x00002000
+Stack_Size      EQU     0x00000400
 
                 AREA    STACK, NOINIT, READWRITE, ALIGN=3
 Stack_Mem       SPACE   Stack_Size
@@ -57,7 +42,7 @@ __initial_sp
 ;   <o>  Heap Size (in Bytes) <0x0-0xFFFFFFFF:8>
 ; </h>
 
-Heap_Size       EQU     0x00001000
+Heap_Size       EQU     0x00000200
 
                 AREA    HEAP, NOINIT, READWRITE, ALIGN=3
 __heap_base
@@ -133,7 +118,7 @@ __Vectors       DCD     __initial_sp               ; Top of Stack
                 DCD     USART2_IRQHandler          ; USART2
                 DCD     USART3_IRQHandler          ; USART3
                 DCD     EXTI15_10_IRQHandler       ; EXTI Line 15..10
-                DCD     RTC_Alarm_IRQHandler        ; RTC Alarm through EXTI Line
+                DCD     RTCAlarm_IRQHandler        ; RTC Alarm through EXTI Line
                 DCD     USBWakeUp_IRQHandler       ; USB Wakeup from suspend
                 DCD     TIM8_BRK_IRQHandler        ; TIM8 Break
                 DCD     TIM8_UP_IRQHandler         ; TIM8 Update
@@ -256,7 +241,7 @@ Default_Handler PROC
                 EXPORT  USART2_IRQHandler          [WEAK]
                 EXPORT  USART3_IRQHandler          [WEAK]
                 EXPORT  EXTI15_10_IRQHandler       [WEAK]
-                EXPORT  RTC_Alarm_IRQHandler        [WEAK]
+                EXPORT  RTCAlarm_IRQHandler        [WEAK]
                 EXPORT  USBWakeUp_IRQHandler       [WEAK]
                 EXPORT  TIM8_BRK_IRQHandler        [WEAK]
                 EXPORT  TIM8_UP_IRQHandler         [WEAK]
@@ -317,7 +302,7 @@ USART1_IRQHandler
 USART2_IRQHandler
 USART3_IRQHandler
 EXTI15_10_IRQHandler
-RTC_Alarm_IRQHandler
+RTCAlarm_IRQHandler
 USBWakeUp_IRQHandler
 TIM8_BRK_IRQHandler
 TIM8_UP_IRQHandler
@@ -370,4 +355,4 @@ __user_initial_stackheap
 
                  END
 
-;************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE*****
+;******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE*****
