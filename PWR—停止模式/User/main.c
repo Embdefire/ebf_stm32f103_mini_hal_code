@@ -50,9 +50,8 @@ int main(void)
 	
 	printf("\r\n 实验说明：\r\n");
 
-	printf("\r\n 1.本程序中，绿灯表示STM32正常运行，红灯表示睡眠状态，蓝灯表示刚从停止状态被唤醒\r\n");
+	printf("\r\n 1.本程序中，亮LED1表示睡眠状态，亮LED2表示刚从停止状态被唤醒\r\n");
 	printf("\r\n 2.程序运行一段时间后自动进入停止状态，在停止状态下，可使用KEY1或KEY2唤醒\r\n");
-	printf("\r\n 3.本实验执行这样一个循环：\r\n ------》亮绿灯(正常运行)->亮红灯(停止模式)->按KEY1或KEY2唤醒->亮蓝灯(刚被唤醒)-----》\r\n");
 	printf("\r\n 4.在停止状态下，DAP下载器无法给STM32下载程序，\r\n 可按KEY1、KEY2唤醒后下载，\r\n 或按复位键使芯片处于复位状态，然后在电脑上点击下载按钮，再释放复位按键，即可下载\r\n");
 
 	while(1)
@@ -61,7 +60,7 @@ int main(void)
 		HAL_Delay(2000);		
 		/*****任务执行完毕，进入睡眠降低功耗***********/
 
-		printf("\r\n 进入停止模式，亮红灯,按KEY1或KEY2按键可唤醒\r\n");
+		printf("\r\n 进入停止模式，亮LED1,按KEY1或KEY2按键可唤醒\r\n");
 
 		//使用LED1指示，进入睡眠状态
 		LED1_ON;
@@ -72,6 +71,7 @@ int main(void)
 		//等待中断唤醒  K1或K2按键中断	
 		/***被唤醒，LED2灯指示***/
 		LED2_ON;
+		LED1_OFF;
 		//根据时钟寄存器的值更新SystemCoreClock变量
 		SystemCoreClockUpdate();
 		//获取唤醒后的时钟状态	
