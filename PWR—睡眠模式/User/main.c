@@ -40,18 +40,19 @@ int main(void)
   /*初始化按键*/
   EXTI_Key_Config();
   
-	printf("\r\n 1.本程序中，绿灯表示STM32正常运行，红灯表示睡眠状态，蓝灯表示刚从睡眠状态被唤醒\r\n");
+	printf("\r\n 1.本程序中，LED1表示睡眠状态，LED2表示刚从睡眠状态被唤醒\r\n");
 	printf("\r\n 2.程序运行一段时间后自动进入睡眠状态，在睡眠状态下，可使用KEY1或KEY2唤醒\r\n");
-	printf("\r\n 3.本实验执行这样一个循环：\r\n ------》亮绿灯(正常运行)->亮红灯(睡眠模式)->按KEY1或KEY2唤醒->亮蓝灯(刚被唤醒)-----》\r\n");
+	printf("\r\n 3.本实验执行这样一个循环：\r\n ------->亮LED1(睡眠模式)->按KEY1或KEY2唤醒->亮LED2(刚被唤醒)-----》\r\n");
 	printf("\r\n 4.在睡眠状态下，DAP下载器无法给STM32下载程序，\r\n 可按KEY1、KEY2唤醒后下载，\r\n 或按复位键使芯片处于复位状态，然后在电脑上点击下载按钮，再释放复位按键，即可下载\r\n");
   while (1)
   {
 		HAL_Delay(2000);		
 		/*****任务执行完毕，进入睡眠降低功耗***********/
 		
-		printf("\r\n 进入睡眠模式，亮红灯,按KEY1或KEY2按键可唤醒\r\n");
+		printf("\r\n 进入睡眠模式，亮LED1,按KEY1或KEY2按键可唤醒\r\n");
 
 		//使用红灯指示，进入睡眠状态
+		LED2_OFF;
 		LED1_ON;
 		//暂停滴答时钟，防止通过滴答时钟中断唤醒
 		HAL_SuspendTick();
@@ -59,8 +60,8 @@ int main(void)
 		HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON,PWR_SLEEPENTRY_WFI);
 		//等待中断唤醒  K1或K2按键中断	
 		/***被唤醒，亮蓝灯指示***/
-		LED1_ON;
-    LED2_OFF;
+		LED1_OFF;
+    LED2_ON;
 		//被唤醒后，恢复滴答时钟	  
 		HAL_ResumeTick();
 		HAL_Delay(2000);	
