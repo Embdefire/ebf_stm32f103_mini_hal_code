@@ -182,7 +182,8 @@ void PVD_IRQHandler(void)
 
 void HAL_PWR_PVDCallback(void)
 {
-  LED1_ON;
+  LED1_OFF;
+	LED2_ON;
 }
 /**
   * @}

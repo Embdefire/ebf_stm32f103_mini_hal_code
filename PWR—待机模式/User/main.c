@@ -46,7 +46,7 @@ int main(void)
 	
 	printf("\r\n 实验说明：\r\n");
 
-	printf("\r\n 1.本程序中，绿灯表示本次复位是上电或引脚复位，红灯表示即将进入待机状态，蓝灯表示本次是待机唤醒的复位\r\n");
+	printf("\r\n 1.本程序中，两个LED都点亮表示本次复位是上电或引脚复位，LED1点亮表示即将进入待机状态，LED2点亮表示本次是待机唤醒的复位\r\n");
 	printf("\r\n 2.长按KEY2按键后，会进入待机模式\r\n");
 	printf("\r\n 3.在待机模式下，按KEY1按键可唤醒，唤醒后系统会进行复位，程序从头开始执行\r\n");
 	printf("\r\n 4.可通过检测WU标志位确定复位来源\r\n");
@@ -57,13 +57,15 @@ int main(void)
 	if(__HAL_PWR_GET_FLAG(PWR_FLAG_SB) == SET)
 	{
 		__HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
-    
+
+    LED2_ON	;
+    LED1_OFF;
 		printf("\r\n 待机唤醒复位 \r\n");
 	}
 	else
 	{
-		LED2_ON	;
-    LED1_OFF;
+		LED1_ON;
+		LED2_ON;
 		printf("\r\n 非待机唤醒复位 \r\n");
 	}
 	
