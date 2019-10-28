@@ -36,7 +36,7 @@ typedef enum { FAILED = 0, PASSED = !FAILED} TestStatus;
 
    
 /* 发送缓冲区初始化 */
-uint8_t Tx_Buffer[] = "感谢您选用秉火stm32开发板\r\nhttp://firestm32.taobao.com";
+uint8_t Tx_Buffer[] = "感谢您选用野火stm32开发板\r\nhttp://firestm32.taobao.com";
 uint8_t Rx_Buffer[BufferSize];
 
 //读取的ID存储位置
@@ -100,12 +100,12 @@ int main(void)
 		if( PASSED == TransferStatus1 )
 		{    
 			LED2_ON;
-			printf("\r\n16M串行flash(W25Q64)测试成功!\n\r");
+			printf("\r\n8M串行flash(W25Q64)测试成功!\n\r");
 		}
 		else
 		{        
 			LED1_ON;
-			printf("\r\n16M串行flash(W25Q64)测试失败!\n\r");
+			printf("\r\n8M串行flash(W25Q64)测试失败!\n\r");
 		}
 	}// if (FlashID == sFLASH_ID)
 	else
