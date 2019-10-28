@@ -66,7 +66,6 @@ int main(void)
 	/* 等待DMA传输完成 */
 	while(__HAL_DMA_GET_FLAG(&DMA_Handle,DMA_FLAG_TC6)==RESET)
 	{
-
 	}   
 
 	/* 比较源数据与传输后数据 */
@@ -79,10 +78,9 @@ int main(void)
 	}
 	else
 	{ 
-		/* 源数据与传输后数据相等时RGB彩色灯显示蓝色 */
+		/* 源数据与传输后数据相等时LED2显示蓝色 */
 		LED2_ON;
 	}
-
 	while (1)
 	{		
 	}
