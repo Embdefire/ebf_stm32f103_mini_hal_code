@@ -38,11 +38,9 @@ int main(void)
 	SysTick_Init();
 	while(1)                            
 	{
-	  LED_RED; 
+	  LED1_TOGGLE;
 	  Delay_us(100000);    	// 10000 * 10us = 1000ms
-	  LED_GREEN;
-	  Delay_us(100000);		// 10000 * 10us = 1000ms
-	  LED_BLUE;
+	  LED1_TOGGLE;
 	  Delay_us(100000);		// 10000 * 10us = 1000ms
 	}
 }
