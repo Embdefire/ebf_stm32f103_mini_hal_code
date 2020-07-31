@@ -28,7 +28,7 @@ extern __IO uint32_t ADC_ConvertedValue;
 
 // 局部变量，用于保存转换计算后的电压值 	 
 float ADC_Vol; 
-
+uint16_t ADC_Data; 
 static void Delay(__IO uint32_t nCount)	 //简单的延时函数
 {
 	for(; nCount != 0; nCount--);
@@ -48,8 +48,9 @@ int main(void)
     while (1)
     {	
 		Delay(0x1fffff);
-        ADC_Vol =(float) ADC_ConvertedValue/4096*(float)3.3; // 读取转换的AD值
-        printf("\r\n The current AD value = 0x%04X \r\n", ADC_ConvertedValue); 
+			  ADC_Data = ADC_ConvertedValue;
+        ADC_Vol =(float) ADC_Data/4096*(float)3.3; // 读取转换的AD值
+        printf("\r\n The current AD value = 0x%04X \r\n", ADC_Data); 
         printf("\r\n The current AD value = %f V \r\n",ADC_Vol);              
     }   
 }

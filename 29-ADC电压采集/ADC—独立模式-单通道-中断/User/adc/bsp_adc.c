@@ -45,7 +45,9 @@ static void Rheostat_ADC_Mode_Config(void)
     ADC_Config.SamplingTime = ADC_SAMPLETIME_55CYCLES_5 ;
     // 配置 ADC 通道转换顺序为1，第一个转换，采样时间为3个时钟周期
     HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config);
-
+		/* 执行ADC 自校准 */
+    HAL_ADCEx_Calibration_Start(&ADC_Handle);
+		
     HAL_ADC_Start_IT(&ADC_Handle);
 }
 
