@@ -28,11 +28,11 @@ static void Rheostat_ADC_Mode_Config(void)
     // 数据传输通道
      hdma_adcx.Instance = RHEOSTAT_ADC_DMA_STREAM;
   
-     hdma_adcx.Init.Direction=DMA_PERIPH_TO_MEMORY;;            //存储器到外设
+     hdma_adcx.Init.Direction=DMA_PERIPH_TO_MEMORY;;            //外设到存储器
      hdma_adcx.Init.PeriphInc=DMA_PINC_DISABLE;                 //外设非增量模式
-     hdma_adcx.Init.MemInc=DMA_MINC_DISABLE;                     //存储器增量模式 
+     hdma_adcx.Init.MemInc=DMA_MINC_ENABLE;    //                 //存储器增量模式 
      hdma_adcx.Init.PeriphDataAlignment=DMA_PDATAALIGN_HALFWORD;//外设数据长度:16位
-     hdma_adcx.Init.MemDataAlignment=DMA_PDATAALIGN_HALFWORD;   //存储器数据长度:16位
+     hdma_adcx.Init.MemDataAlignment=DMA_MDATAALIGN_HALFWORD;   //存储器数据长度:16位
      hdma_adcx.Init.Mode= DMA_CIRCULAR;                         //外设普通模式
      hdma_adcx.Init.Priority=DMA_PRIORITY_MEDIUM;               //中等优先级
 
@@ -62,10 +62,12 @@ static void Rheostat_ADC_Mode_Config(void)
     ADC_Config.Channel      = RHEOSTAT_ADC_CHANNEL;
     ADC_Config.Rank         = 1;
     // 采样时间间隔	
-    ADC_Config.SamplingTime = ADC_SAMPLETIME_55CYCLES_5 ;
+    ADC_Config.SamplingTime = ADC_SAMPLETIME_239CYCLES_5 ;
     // 配置 ADC 通道转换顺序为1，第一个转换，采样时间为3个时钟周期
     HAL_ADC_ConfigChannel(&ADC_Handle, &ADC_Config);
-
+		/* 执行ADC 自校准 */
+    HAL_ADCEx_Calibration_Start(&ADC_Handle);
+		
     HAL_ADC_Start_DMA(&ADC_Handle, (uint32_t*)&ADC_ConvertedValue, 1);
 }
 
