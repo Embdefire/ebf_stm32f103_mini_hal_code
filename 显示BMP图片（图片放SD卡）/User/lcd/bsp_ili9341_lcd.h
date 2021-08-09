@@ -93,10 +93,15 @@ extern uint8_t LCD_SCAN_MODE;
 #define      CMD_SetPixel		 		          0x2C	     //填充像素
 
 
+/* 定义 LCD 驱动芯片 ID */
+#define     LCDID_UNKNOWN             0
+#define     LCDID_ILI9341             0x9341
+#define     LCDID_ST7789V             0x8552
 
 
 /********************************** 声明 ILI934 函数 ***************************************/
 void                     ILI9341_Init                    ( void );
+uint16_t                 ILI9341_ReadID                  ( void );
 void                     ILI9341_Rst                     ( void );
 void                     ILI9341_BackLed_Control         ( FunctionalState enumState );
 void                     ILI9341_GramScan                ( uint8_t ucOtion );
@@ -119,7 +124,6 @@ void 											LCD_SetBackColor								(uint16_t Color);
 void 											LCD_SetTextColor								(uint16_t Color)	;
 void 											LCD_SetColors										(uint16_t TextColor, uint16_t BackColor);
 void 											LCD_GetColors										(uint16_t *TextColor, uint16_t *BackColor);
-uint16_t 								ILI9341_Read_ID									(void);
 
 
 /* 直接操作寄存器的方法控制IO */

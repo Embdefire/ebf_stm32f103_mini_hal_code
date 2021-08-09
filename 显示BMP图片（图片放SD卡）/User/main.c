@@ -41,7 +41,11 @@ FIL file,bmpfdst;									/* 文件对象 */
 FRESULT f_res;                    /* 文件操作结果 */
 
 BYTE pColorData[960];			/* 一行真彩色数据缓存 320 * 3 = 960 */
-#define BMP_DEBUG_PRINTF(FORMAT,...)    printf(FORMAT,##__VA_ARGS__)	 
+#define BMP_DEBUG_PRINTF(FORMAT,...)    printf(FORMAT,##__VA_ARGS__)
+
+extern uint16_t lcdid;
+
+
 /**
   * @brief  主函数
   * @param  无
@@ -90,7 +94,14 @@ int main(void)
   f_res = f_mount(&fs,(TCHAR const*)SDPath,1);
   printf_fatfs_error(f_res);
   
-  ILI9341_GramScan ( 6 );
+  if(lcdid == LCDID_ILI9341)
+  {
+    ILI9341_GramScan ( 6 );
+  }
+  else if(lcdid == LCDID_ST7789V)
+  {
+    ILI9341_GramScan ( 0 );
+  }
   
   f_res = f_open( &file , "wildfire_1.bmp", FA_OPEN_EXISTING | FA_READ);	
   

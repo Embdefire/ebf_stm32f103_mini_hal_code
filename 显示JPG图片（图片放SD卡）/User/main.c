@@ -31,6 +31,8 @@
   */
 extern void jpgDisplay();
 
+extern uint16_t lcdid;
+
 /**
   * @brief  主函数
   * @param  无
@@ -51,7 +53,14 @@ int main(void)
 	LCD_SetFont(&Font8x16);
 	LCD_SetColors(RED,BLACK);
   ILI9341_Clear(0,0,LCD_X_LENGTH,LCD_Y_LENGTH);	/* 清屏，显示全黑 */
-  ILI9341_GramScan ( 6 );
+  if(lcdid == LCDID_ILI9341)
+  {
+    ILI9341_GramScan ( 6 );
+  }
+  else if(lcdid == LCDID_ST7789V)
+  {
+    ILI9341_GramScan ( 0 );
+  }
 
 	/* 初始化调试串口，一般为串口1 */
 	DEBUG_USART_Config();	
